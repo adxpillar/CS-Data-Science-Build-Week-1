@@ -1,4 +1,6 @@
 import math 
+import numpy as np
+import pandas as pd
 
 # Implementing a decision tree 
 # Classification tree using entropy for best split 
@@ -116,7 +118,7 @@ class DecisionTreeClassifier:
         col = None
         min_entropy = 1
         cutoff = None 
-        # Transpose and iterate through each feature
+        # Transpose features and iterate through each feature
         for i, c in enumerate (x.T):
             # find best split on column
             entropy, current_cutoff = self.find_best_split(c,y)
@@ -130,8 +132,63 @@ class DecisionTreeClassifier:
                 cutoff = current_cutoff
         return col, cutoff, min_entropy
 
+    # fit function
+    # we recursively split into nodes from top to bottom 
+    def fit(self,x,y,this_node={},depth=0):
+        """
+        args: features, target variable, node generated for this x and y
+        returns: None
+
+        """
+        #  find our base cases 
+        # case 1: tree stops at root
+        if this_node is None:
+            return None 
+        #  case 2: no data in this group 
+        elif len(y) == 0:
+            return None 
+        #  case 3: all values of y are the same this node
+        elif self.values_identical(y):
+            return {'val':y[0]}
+        # case 4: we reached max depth 
+        elif depth >= self.max_depth:
+            return None
+        else:
+            # recursively generate trees
+            # find split given information gain 
+            col, cuttoff, entropy = self.find_best_split_of_all(x, y)
+            # left of data
+            y_left = y[x[:, col] < cutoff] 
+            # right of data 
+            y_right = y[x[:, col] >= cutoff] 
+            # set node with the information
+            this_node = {'col': iris.feature_names[col], 'index_col': col,
+                        'cutoff': cuttoff,
+                        'value': np.round(np.mean(y))
+                        }
+            # generate tree for left handside data
+            this_node['left'] = self.fit(x[x[:, col] < cutoff], y_left, {}, depth+1)
+            # generate tree for right handside data 
+            this_node['right'] = self.fit(x[x[:, col] >= cutoff], y_right, {}, depth+1)   
+            # increase depth of tree
+            self.depth += 1 
+            self.trees = this_node
+            return this_node
+    
+    # function to check group with same values 
+    def values_identical(self,items):
+        """
+        args: iterable variable list
+        returns: True if all values are identical
+        """
+        return all(x == items[0] for x in items)
+
+
 
         
+
+
+
 
 
 
