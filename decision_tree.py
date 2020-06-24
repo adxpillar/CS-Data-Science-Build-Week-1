@@ -69,7 +69,78 @@ def get_entropy(y_predict,y_real):
 
 
 
+# Decison tree 
 
+class DecisionTreeClassifier:
+
+    """
+    implementing decision tree classifier with 
+    max depth
+    min_sample_leaf
+
+    """
+
+    def __init__(self,max_depth):
+        self.depth = 0
+        self.max_depth = max_depth
+
+    # defining how split is done
+
+    # find best split for one column
+    def find_best_split(self,col,y):
+        """
+        args: column to split on, target variable
+        return: minimum entropy and its cuttoff point
+        """
+        min_entropy =  10
+        n = len(y)
+        # iterate through each value in the column
+        for value in set(col):
+            # separate y into two groups
+            y_predict = col < value 
+            # get entropy of the split
+            the_entropy = get_entropy(y_predict,y)
+            # check if this is the best value
+            if the_entropy <= min_entropy:
+                min_entropy = the_entropy
+                #  select value as cutoff point
+                cuttoff = value
+        return min_entropy, cutoff
+    
+    # find best split for multiple columns 
+    def find_best_split_of_all(self,x,y):
+        """
+        args: features, target variable
+        returns: col to split on, cutoff, minimum entropy
+        """
+        col = None
+        min_entropy = 1
+        cutoff = None 
+        # Transpose and iterate through each feature
+        for i, c in enumerate (x.T):
+            # find best split on column
+            entropy, current_cutoff = self.find_best_split(c,y)
+            # find the first perfect split and returns the cutoff
+            if entropy == 0:
+                return i, current_cutoff, entropy
+            # check if it's the best so far and update values
+            elif entropy <= min_entropy:
+                min_entropy = entropy
+                col = i
+                cutoff = current_cutoff
+        return col, cutoff, min_entropy
+
+
+        
+
+
+
+
+
+        
+
+
+            
 
 
 
