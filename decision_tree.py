@@ -67,7 +67,7 @@ def get_entropy(y_predict,y_real):
     i_false, n_false = entropy_of_one_subset(y_real[~y_predict]) #right
     # total entropy
     i = n_true*1.0/n * i_true + n_false*1.0/n * i_false 
-    return s
+    return i
 
 
 
@@ -106,7 +106,7 @@ class DecisionTreeClassifier:
             if the_entropy <= min_entropy:
                 min_entropy = the_entropy
                 #  select value as cutoff point
-                cuttoff = value
+                cutoff = value
         return min_entropy, cutoff
     
     # find best split for multiple columns 
@@ -156,14 +156,14 @@ class DecisionTreeClassifier:
         else:
             # recursively generate trees
             # find split given information gain 
-            col, cuttoff, entropy = self.find_best_split_of_all(x, y)
+            col, cutoff, entropy = self.find_best_split_of_all(x, y)
             # left of data
             y_left = y[x[:, col] < cutoff] 
             # right of data 
             y_right = y[x[:, col] >= cutoff] 
             # set node with the information
             this_node = {'col': iris.feature_names[col], 'index_col': col,
-                        'cutoff': cuttoff,
+                        'cutoff': cutoff,
                         'value': np.round(np.mean(y))
                         }
             # generate tree for left handside data
@@ -183,8 +183,52 @@ class DecisionTreeClassifier:
         """
         return all(x == items[0] for x in items)
 
+    # predict function 
+    def predict(self,x):
+        """
+        args: features
+        returns: prediction result 
+        """
+        results = np.array([0]*len(x))
+        # access each row in the test data
+        for i, c in enumerate(x):
+            results[i] = self._get_prediction(c)
+        return results
+
+    # get prediction 
+    def _get_prediction(self,row):
+        """
+        args: rows in 
+        returns: prediction 
+        """
+        # access trees
+        current_layer = self.trees
+        # if it's not leaf node
+        while current_layer.get('cutoff'):
+            # get the direction
+            if row[current_layer['index_col']] < current_layer['cutoff']:
+                current_layer = current_layer['left']
+            else:
+                current_layer = current_layer['right']
+        # if leaf node, return value        
+        else:
+            return current_layer.get('val')
 
 
+
+
+
+from sklearn.datasets import load_iris
+from pprint import pprint
+
+iris = load_iris()
+
+x = iris.data
+y = iris.target 
+
+clf = DecisionTreeClassifier(max_depth=7)
+model = clf.fit(x,y)
+pprint(model)
         
 
 
